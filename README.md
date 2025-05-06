@@ -4,8 +4,8 @@
 
 This project uses a **BERT-based** machine learning model to identify and classify toxic comments from Reddit. The model is trained on the **train.csv** dataset and evaluated on **test.csv**, focusing on various types of toxicity such as "toxic," "severe\_toxic," "obscene," etc and compare its performance against two classical baselines:
 
-*TF–IDF + Logistic Regression
-*TF–IDF + Calibrated SVM
+* TF–IDF + Logistic Regression
+* TF–IDF + Calibrated SVM
 
 
 
