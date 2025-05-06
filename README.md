@@ -9,7 +9,7 @@ This project uses a **BERT-based** machine learning model to identify and classi
 * **Train Dataset**: `train.csv` - Contains comments labeled with various toxicity types.
 * **Test Dataset**: `test.csv` - Used for evaluating the model.
 
-[Link to Dataset](https://www.kaggle.com/datasets/your-dataset-link)
+[Link to Dataset](www.kaggle.com/competitions/jigsaw-toxic-comment-classification-challenge/overview/$citation)
 
 ## Features
 
