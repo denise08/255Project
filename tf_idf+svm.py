@@ -49,7 +49,7 @@ pipeline = Pipeline([
     ('tfidf', TfidfVectorizer(ngram_range=(1,2), max_features=20000, min_df=5)),
     ('clf',   clf)
 ])
-
+# Model : SVM for Multi-Label
 print("Training SVM-based toxicity classifier...")
 pipeline.fit(X_train, y_train)
 
