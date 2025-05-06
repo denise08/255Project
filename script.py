@@ -164,7 +164,71 @@ pred_df = pd.DataFrame(test_predictions, columns=label_cols)
 final_output = pd.concat([external_test_df, pred_df], axis=1)
 final_output.to_csv("final_predictions.csv", index=False)
 
+from sklearn.metrics import roc_curve, auc, hamming_loss, multilabel_confusion_matrix
+from sklearn.preprocessing import label_binarize
 
+# --- 14. Evaluate on Validation Set with ROC, Hamming Loss, Heatmap ---
+
+# Get true labels and predictions
+val_loader = DataLoader(dataset["test"], batch_size=16)
+all_logits, all_labels = [], []
+
+model.eval()
+device = next(model.parameters()).device
+
+for batch in val_loader:
+    input_ids = batch["input_ids"].to(device)
+    attention_mask = batch["attention_mask"].to(device)
+    labels = batch["labels"].cpu().numpy()
+    with torch.no_grad():
+        outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+        logits = outputs.logits.cpu().numpy()
+    all_logits.append(logits)
+    all_labels.append(labels)
+
+all_logits = np.vstack(all_logits)
+all_labels = np.vstack(all_labels)
+probs = torch.sigmoid(torch.tensor(all_logits)).numpy()
+preds = (probs > 0.5).astype(int)
+
+# --- 14.1 Hamming Loss ---
+hloss = hamming_loss(all_labels, preds)
+print(f"\nHamming Loss: {hloss:.4f}")
+
+# --- 14.2 ROC Curve Plot ---
+fpr = dict()
+tpr = dict()
+roc_auc = dict()
+
+for i in range(len(label_cols)):
+    fpr[i], tpr[i], _ = roc_curve(all_labels[:, i], probs[:, i])
+    roc_auc[i] = auc(fpr[i], tpr[i])
+
+plt.figure(figsize=(10, 7))
+for i in range(len(label_cols)):
+    plt.plot(fpr[i], tpr[i], label=f"{label_cols[i]} (AUC = {roc_auc[i]:.2f})")
+plt.plot([0, 1], [0, 1], "k--", lw=1)
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("ROC Curves for Toxic Comment Categories")
+plt.legend(loc="lower right")
+plt.grid(True)
+plt.show()
+
+# --- 14.3 Heatmap from Confusion Matrix ---
+conf_matrices = multilabel_confusion_matrix(all_labels, preds)
+fig, axs = plt.subplots(2, 3, figsize=(15, 10))
+axs = axs.ravel()
+for i in range(len(label_cols)):
+    sns.heatmap(conf_matrices[i], annot=True, fmt="d", ax=axs[i], cmap="Blues", cbar=False)
+    axs[i].set_title(f"Confusion Matrix: {label_cols[i]}")
+    axs[i].set_xlabel("Predicted")
+    axs[i].set_ylabel("True")
+
+plt.tight_layout()
+plt.show()
+
+# --- 15. Predicting Toxicity from User Input ---
 def predict_comment(text, model, tokenizer, label_cols, threshold=0.5):
     model.eval()
 
